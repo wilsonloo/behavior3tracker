@@ -5,7 +5,7 @@ local Mgr = require "mgr"
 
 local WindowSize = {
     w = 1280,
-    h = 1024,
+    h = 600,
 }
 
 local mgr = Mgr.new(WindowSize)
@@ -21,22 +21,23 @@ local function get_first_war(mgr)
     end
 end
 
-local function draw_war_ids()
-    local cur_war = mgr:get_cur_war()
+local function draw_frame_ids()
+    local cur_frame = mgr:get_cur_frame()
     local count = 0
-    for k = #mgr.war_ids, 1, -1 do
+    for k = #mgr.frames, 1, -1 do
         local old_color
-        if cur_war and cur_war.war_id == mgr.war_ids[k] then
+        if cur_frame and cur_frame.frame_id == mgr.frames[k].frame_id then
             old_color = ColorUtils.set_color_green()
         end
-        love.graphics.print("war:" .. mgr.war_ids[k], 0, count * 20)
+        love.graphics.print("frame:" .. mgr.frames[k].frame_id, 0, count * 20)
         ColorUtils.restore_color(old_color)
         count = count + 1
     end
 end
+
 function love.draw()
     --love.graphics.print("Hello World!", 400, 300)
-    draw_war_ids()
+    draw_frame_ids()
     mgr:draw()
 end
 
@@ -61,13 +62,13 @@ function love.load(args)
     local b3_log = args[3]
 
     mgr:setup(mode, b3_file)
+    mgr:load_b3_tree()
+
     if mode == "file" then
         mgr:set_b3log(b3_log)
-
         mgr:load_from_logfile()
-        mgr:show_current()
 
     elseif mode == "runtime" then
-        mgr:start_watch_file()
+        -- TODO
     end
 end

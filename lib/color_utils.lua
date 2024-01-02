@@ -14,6 +14,12 @@ function M.set_color_green()
     return {r, g, b, a}
 end
 
+function M.set_color(r, g, b, a)
+    local _r, _g, _b, _a = love.graphics.getColor()
+    love.graphics.setColor(r, g, b, a or _a)
+    return {_r, _g, _b, _a}
+end
+
 function M.restore_color(old)
     if old then
         love.graphics.setColor(tunpack(old))

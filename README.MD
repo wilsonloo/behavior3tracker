@@ -15,17 +15,18 @@
 
 ## 如何使用，分两种使用模式
 * 模式一：加载日志文件
+    ```bat
+        cd love2d
 
-```bat
-    cd love2d
+        @rem love ..\\. file <行为树定义文件> <行为树运行日志文件> [--console选项表示开启终端]
+        set b3_file=..\\sample\\close_combat.json
+        set b3_log=..\\sample\\b3log-1036200.json
+        love ..\\. file %b3_file% %b3_log% --console
 
-    @rem love ..\\. file <行为树定义文件> <行为树运行日志文件> [--console选项表示开启终端]
-    set b3_file=..\\sample\\close_combat.json
-    set b3_log=..\\sample\\b3log-1036200.json
-    love ..\\. file %b3_file% %b3_log% --console
+        cd ..
+    ```
 
-    cd ..
-```
+* 模式二：动态读取（待续，todo）
 
 edit the flowing .bat file and change file using res/logic_test.log
 load_file.bat load local log file to parse and render

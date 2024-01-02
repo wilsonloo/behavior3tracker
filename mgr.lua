@@ -2,11 +2,13 @@ local PrintR = require "lib.print_r"
 local Json = require "lib.json"
 local Mouse = require "mouse"
 local Treeview = require "views.treeview"
+local Config = require "config"
 
 local tunpack = unpack or table.unpack
 local tinsert = table.insert
 local tsort = table.sort
 local string_gsub = string.gsub
+local string_match = string.match
 local string_format = string.format
 
 local ValueType = {
@@ -89,11 +91,11 @@ end
 local mt = {}
 mt.__index = mt
 
-function mt:load_b3_tree(b3_file)
-    assert(self.b3_file, "missing b3_tree")
+function mt:load_b3_tree()
+    assert(self.b3_tree, "missing b3_tree")
 
-    local f = io.open(self.b3_file, "r")
-    assert(f, self.b3_file)
+    local f = io.open(self.b3_tree.fullpath, "r")
+    assert(f, self.b3_tree.fullpath)
     local text = f:read("a")
     f:close()
 
@@ -111,8 +113,8 @@ end
 function mt:load_from_logfile()
     assert(self.b3_log, "missing b3_log")
     
-    local f = io.open(self.b3_log, "r")
-    assert(f, self.b3_log)
+    local f = io.open(self.b3_log.fullpath, "r")
+    assert(f, self.b3_log.fullpath)
     local text = f:read("a")
     f:close()
 
@@ -180,9 +182,35 @@ function mt:select_prev_frame()
     assert(self.frames[self.frame_slot], "frame missed of slot:"..self.frame_slot)
 end
 
-function mt:setup(mode, b3_file)
+local function get_json_filenames(path)
+    local list = {}
+    local baseDir = love.filesystem.getSourceBaseDirectory()
+    local files = love.filesystem.getDirectoryItems(path)
+    for _, file in ipairs(files) do
+        local filePath = path .. "/" .. file
+        local attr = love.filesystem.getInfo(filePath)
+        if attr.type == "file" then
+            if string_match(file, ".*%.json$") then
+                tinsert(list, {
+                    file = file,
+                    fullpath = baseDir.."/../"..filePath,
+                })
+            end
+        end
+    end
+    local PrintR = require "lib.print_r"
+    PrintR.print_r(777, list)
+    return list
+end
+
+function mt:setup(mode, b3_tree_dir, b3_log_dir)
     self.mode = mode
-    self.b3_file = b3_file
+
+    self.b3_tree_list = get_json_filenames(Config.B3TreeDir)
+    self.b3_tree = self.b3_tree_list[1]
+
+    self.b3_log_list = get_json_filenames(Config.B3LogDir)
+    self.b3_log = self.b3_log_list[1]
 end
 
 function mt:set_b3log(b3_log)
@@ -225,7 +253,7 @@ function M.new(WindowSize)
         WindowSize = WindowSize,
         ScrollerMatrix = {
             x = 80,
-            y = 0,
+            y = Config.MARGIN_TOP,
             w = WindowSize.w - 60,
             h = WindowSize.h,
         },
@@ -237,10 +265,14 @@ function M.new(WindowSize)
         frame_slot = nil,
 
         mode = nil,
-        b3_file = nil,
+
+        b3_tree_list = {},
+        b3_tree = nil,
+
+        b3_log_list = {},
         b3_log = nil,
 
-        last_size = nil,
+        menu = 0,
     }, mt)
 
     Mouse.register("mousepressed", function(x, y, button, istouch)

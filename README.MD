@@ -18,9 +18,9 @@
     ```bat
         cd love2d
 
-        @rem love ..\\. file <行为树定义文件> <行为树运行日志文件> [--console选项表示开启终端]
-        set b3_file=..\\sample\\close_combat.json
-        set b3_log=..\\sample\\b3log-1036200.json
+        @rem love ..\\. file <行为树定义文件所在完整目录> <行为树运行日志文件所在完整目录> [--console选项表示开启终端]
+        set b3_file=..\\sample\\b3_tree\\
+        set b3_log=..\\sample\\b3_log\\
         love ..\\. file %b3_file% %b3_log% --console
 
         cd ..

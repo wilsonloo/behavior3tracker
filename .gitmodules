@@ -1,0 +1,3 @@
+[submodule "loui"]
+	path = loui
+	url = git@github.com:wilsonloo/loui.git

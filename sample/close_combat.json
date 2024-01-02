@@ -1,0 +1,147 @@
+{
+  "name": "close_combat",
+  "root": {
+    "id": 1,
+    "name": "Sequence",
+    "desc": "新建行为树",
+    "children": [
+      {
+        "id": 2,
+        "name": "Selector",
+        "children": [
+          {
+            "id": 3,
+            "name": "Sequence",
+            "desc": "优先追杀碰撞的敌人",
+            "args": {},
+            "children": [
+              {
+                "id": 4,
+                "name": "HasCollideEnemy",
+                "args": {},
+                "input": [
+                  "collide_eid"
+                ],
+                "output": [
+                  "collide_eid"
+                ]
+              },
+              {
+                "id": 5,
+                "name": "ChaseEnemy",
+                "args": {},
+                "input": [
+                  "collide_eid",
+                  "behurt_eid"
+                ],
+                "output": [
+                  "enemy_eid"
+                ]
+              },
+              {
+                "id": 6,
+                "name": "IsAlive",
+                "args": {},
+                "input": [
+                  "enemy_eid"
+                ],
+                "output": []
+              },
+              {
+                "id": 7,
+                "name": "Attack",
+                "args": {},
+                "input": [
+                  "enemy_eid"
+                ]
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "name": "Sequence",
+            "desc": "再尝试追击被动敌人",
+            "args": {},
+            "children": [
+              {
+                "id": 9,
+                "name": "HasBehurtEnemy",
+                "args": {},
+                "input": [],
+                "output": [
+                  "behurt_eid"
+                ]
+              },
+              {
+                "id": 10,
+                "name": "Not",
+                "children": [
+                  {
+                    "id": 11,
+                    "name": "IsMoving"
+                  }
+                ]
+              },
+              {
+                "id": 12,
+                "name": "ChaseEnemy",
+                "args": {},
+                "input": [
+                  "collide_eid",
+                  "behurt_eid"
+                ],
+                "output": [
+                  "enemy_eid"
+                ]
+              },
+              {
+                "id": 13,
+                "name": "IsAlive",
+                "args": {},
+                "input": [
+                  "enemy_eid"
+                ],
+                "output": []
+              },
+              {
+                "id": 14,
+                "name": "Attack",
+                "args": {},
+                "input": [
+                  "enemy_eid"
+                ]
+              }
+            ]
+          },
+          {
+            "id": 15,
+            "name": "Sequence",
+            "desc": "没有移动时进行碰撞检测",
+            "args": {},
+            "children": [
+              {
+                "id": 16,
+                "name": "Not",
+                "children": [
+                  {
+                    "id": 17,
+                    "name": "IsMoving"
+                  }
+                ]
+              },
+              {
+                "id": 18,
+                "name": "FindCollideEnemy",
+                "args": {},
+                "output": [
+                  "collide_eid"
+                ],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

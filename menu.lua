@@ -5,44 +5,99 @@ local Config = require "config"
 local mmin = math.min
 local mmax = math.max
 
--- 行为树菜单
-local MenuB3Tree = {
-    draw_name = function(x)
-        local b3_tree = Global.mgr.b3_tree
-        local old_color = nil
-        if Global.mgr.menu == Config.MenuType.B3Tree then
+local function _draw_name(x, cur_key, menu_type)
+    local mgr = Global.mgr
+    local cur = mgr[cur_key]
+    local old_color = nil
+    if mgr.menu == menu_type then
+        old_color = ColorUtils.set_color_green()
+    end
+
+    local menuStr = (cur and cur.file) or "empty"
+    local len = love.graphics.getFont():getWidth(menuStr)
+    love.graphics.print(menuStr, x, 0)
+    x = x + len
+
+    if old_color then
+        ColorUtils.restore_color(old_color)
+    end
+
+    return x
+end
+
+local function _draw_dropdown(cur_key, list)
+    local mgr = Global.mgr
+    local cur = mgr[cur_key]
+    
+    local count = 0
+    for k = 1, #list do
+        local old_color
+        local PrintR = require "lib.print_r"
+        PrintR.print_r("_draw_dropdown:", cur, list[k])
+        if cur and cur.file == list[k].file then
             old_color = ColorUtils.set_color_green()
         end
 
-        local menuStr = (b3_tree and b3_tree.file) or "no b3 file"
-        local len = love.graphics.getFont():getWidth(menuStr)
-        love.graphics.print(menuStr, x, 0)
-        x = x + len
+        love.graphics.print(list[k].file, 0, Config.MARGIN_TOP + count * 20)
+        count = count + 1
 
         if old_color then
             ColorUtils.restore_color(old_color)
         end
+    end
+end
 
-        return x
+local function _select_dropdown(offset, cur_key, list)
+    local mgr = Global.mgr
+
+    print("_select_drowdown:>>>>>>", offset)
+    if offset == 1 then
+        print("_select_drowdown:", 2)
+        if not mgr[cur_key] then
+            print("_select_drowdown:", 3)
+            mgr:select_menu_item(cur_key, list[#list])
+            return
+        end
+
+        for k = #list, 1, -1 do
+            local v = list[k]
+            if v.file == mgr[cur_key].file then
+                local prev_elem = list[k-1]
+                if prev_elem then
+                    mgr:select_menu_item(cur_key, prev_elem)
+                end
+                break
+            end
+        end
+    elseif offset == -1 then
+        if not mgr[cur_key] then
+            mgr:select_menu_item(cur_key, list[1])
+            return
+        end
+
+        for k, v in ipairs(list) do
+            if v.file == mgr[cur_key].file then
+                local next_elem = list[k+1]
+                if next_elem then
+                    local PrintR = require "lib.print_r"
+                    PrintR.print_r("_select_drowdown:", 4, cur_key, next_elem)
+                    mgr:select_menu_item(cur_key, next_elem)
+                end
+                break
+            end
+        end       
+    end
+end
+
+-- 行为树菜单
+local MenuB3Tree = {
+    draw_name = function(x)
+        return _draw_name(x, "b3_tree", Config.MenuType.B3Tree)
     end,
 
     draw_dropdown = function()
         local mgr = Global.mgr
-        local cur_tree = mgr.b3_tree
-        local count = 0
-        for k = #mgr.b3_tree_list, 1, -1 do
-            local old_color
-            if cur_tree and cur_tree.file == mgr.b3_tree_list[k].file then
-                old_color = ColorUtils.set_color_green()
-            end
-
-            love.graphics.print(mgr.b3_tree_list[k].file, 0, Config.MARGIN_TOP + count * 20)
-            count = count + 1
-
-            if old_color then
-                ColorUtils.restore_color(old_color)
-            end
-        end
+        _draw_dropdown("b3_tree", mgr.b3_tree_list)
     end,
 
     confirm_menu = function()
@@ -51,80 +106,18 @@ local MenuB3Tree = {
 
     select_dropdown = function(offset)
         local mgr = Global.mgr
-
-        if offset == 1 then
-            if not mgr.b3_tree then
-                mgr.b3_tree = mgr.b3_tree_list[1]
-                return
-            end
-
-            for k, v in ipairs(mgr.b3_tree_list) do
-                if v.file == mgr.b3_tree.file then
-                    local next_tree = mgr.b3_tree_list[k+1]
-                    if next_tree then
-                        mgr.b3_tree = next_tree
-                    end
-                    break
-                end
-            end
-        elseif offset == -1 then
-            if not mgr.b3_tree then
-                mgr.b3_tree = mgr.b3_tree_list[#mgr.b3_tree_list]
-                return
-            end
-
-            for k = #mgr.b3_tree_list, 1, -1 do
-                local v = mgr.b3_tree_list[k]
-                if v.file == mgr.b3_tree.file then
-                    local prev_tree = mgr.b3_tree_list[k-1]
-                    if prev_tree then
-                        mgr.b3_tree = prev_tree
-                    end
-                    break
-                end
-            end
-        end
+        _select_dropdown(offset, "b3_tree", mgr.b3_tree_list)
     end,
 }
 
 -- 数据文件菜单
 local MenuB3Log = {
     draw_name = function(x)
-        local b3_log = Global.mgr.b3_log
-        local old_color = nil
-        if Global.mgr.menu == Config.MenuType.B3Log then
-            old_color = ColorUtils.set_color_green()
-        end
-
-        local menuStr = (b3_log and b3_log.file) or "no b3 file"
-        local len = love.graphics.getFont():getWidth(menuStr)
-        love.graphics.print(menuStr, x, 0)
-        x = x + len
-
-        if old_color then
-            ColorUtils.restore_color(old_color)
-        end
-
-        return x
+        return _draw_name(x, "b3_log", Config.MenuType.B3Log)
     end,
 
     draw_dropdown = function()
-        local mgr = Global.mgr
-        local b3_log = mgr.b3_log
-        local count = 0
-        for k = #mgr.b3_log_list, 1, -1 do
-            local old_color
-            if b3_log and b3_log.file == mgr.b3_log_list[k].file then
-                old_color = ColorUtils.set_color_green()
-            end
-
-            love.graphics.print(mgr.b3_log_list[k].file, 0, Config.MARGIN_TOP + count * 20)
-            count = count + 1
-
-            if old_color then
-                ColorUtils.restore_color(old_color)
-            end
-        end
+        _draw_dropdown("b3_log", Global.mgr.b3_log_list)
     end,
 
     confirm_menu = function()
@@ -133,39 +126,7 @@ local MenuB3Log = {
     
     select_dropdown = function(offset)
         local mgr = Global.mgr
-
-        if offset == 1 then
-            if not mgr.b3_log then
-                mgr.b3_log = mgr.b3_log_list[1]
-                return
-            end
-
-            for k, v in ipairs(mgr.b3_log_list) do
-                if v.file == mgr.b3_log.file then
-                    local next_log = mgr.b3_log_list[k+1]
-                    if next_log then
-                        mgr.b3_log = next_log
-                    end
-                    break
-                end
-            end
-        elseif offset == -1 then
-            if not mgr.b3_log then
-                mgr.b3_log = mgr.b3_log_list[#mgr.b3_log_list]
-                return
-            end
-
-            for k = #mgr.b3_log_list, 1, -1 do
-                local v = mgr.b3_log_list[k]
-                if v.file == mgr.b3_log.file then
-                    local prev_log = mgr.b3_log_list[k-1]
-                    if prev_log then
-                        mgr.b3_log = prev_log
-                    end
-                    break
-                end
-            end
-        end
+        _select_dropdown(offset, "b3_log", mgr.b3_log_list)
     end,
 }
 
@@ -190,6 +151,27 @@ local MenuFrames = {
 
     confirm_menu = function()
         Global.mgr.menu = 0
+    end,
+
+    select_dropdown = function(offset)
+        local mgr = Global.mgr
+        if #mgr.frames <= 0 then
+            print("frame is empty")
+            mgr.frame_slot = nil
+            return
+        end
+    
+        if not mgr.frame_slot then
+            if offset == 1 then
+                mgr.frame_slot = #mgr.frames
+            else
+                mgr.frame_slot = 1
+            end
+            return
+        end
+    
+        mgr.frame_slot = mgr.frame_slot + offset
+        mgr.frame_slot = mmin(mmax(mgr.frame_slot, 1), #mgr.frames)
     end,
 }
 
@@ -230,20 +212,64 @@ function M.draw()
 end
 
 function M.select_menu(offset)
-    local menu = Global.mgr.menu
+    local mgr = Global.mgr
+    local first = false
+    local menu = mgr.menu
     if menu == 0 then
+        first = true
         if offset == 1 then
-            Global.mgr.menu = 1
-            return
+            mgr.menu = 1
         elseif offset == -1 then
-            Global.mgr.menu = #MenuList
-            return
+            mgr.menu = #MenuList
         else
             assert(false, "invalid select menu offset:"..tostring(offset))
         end
     end
 
-    Global.mgr.menu = mmin(mmax(menu+offset, 1), #MenuList)
+    if not first then
+        mgr.menu = mmin(mmax(menu+offset, 1), #MenuList)
+    end
+    
+    local list, cur_key
+    if mgr.menu == Config.MenuType.B3Tree then
+        list = mgr.b3_tree_list
+        cur_key = "b3_tree"
+
+    elseif mgr.menu == Config.MenuType.B3Log then
+        list = mgr.b3_log_list
+        cur_key = "b3_log"
+    else
+        assert(false)
+    end 
+    
+    local recent = mgr.menu_recent_items[cur_key]
+    if recent then
+        -- 检测recent有效性
+        if list then
+            local ok = false
+            for _, v in ipairs(list) do
+                if v.file == recent.file then
+                    ok = true
+                    break
+                end
+            end
+            if not ok then
+                recent = nil
+            end
+        else
+            recent = nil
+        end
+    end
+
+    if recent then
+        mgr:select_menu_item(cur_key, recent)
+    else
+        if #list > 0 then
+            mgr:select_menu_item(cur_key, list[(offset == 1) and 1 or #list])
+        else
+            mgr:select_menu_item(cur_key, nil)
+        end
+    end
 end
 
 return M

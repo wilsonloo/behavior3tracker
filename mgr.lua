@@ -29,48 +29,6 @@ local ValueMetas = {
     },
 }
 
-local function get_war_info(self, war_id)
-    local war = self.treeview_map[war_id]
-    if not war then
-        --print("implement war info, prepare-turn ignored, war_id:", war_id)
-        return
-    end
-    return war
-end
-
-local function cap_matched(line, pattern, no_unpack)
-    local ret
-    string_gsub(line, pattern, function(...)
-        ret = { ... }
-    end)
-    if ret then
-        if no_unpack then
-            return ret
-        else
-            return tunpack(ret)
-        end
-    end
-end
-
-local function cap_with_war_tag(line, pattern)
-    pattern = pattern or ""
-    local ret = cap_matched(line, "%[war:(%d+):([%d-]+):(%d+)/(%d+)%]%s*" .. pattern, true)
-    if ret then
-        local list = {}
-        for k, v in ipairs(ret) do
-            list[k] = tonumber(v) or v
-        end
-        return tunpack(list)
-    end
-end
-
-local function is_first_war(self, war_id)
-    local k = next(self.treeview_map)
-    if not (k) or k == war_id then
-        return true
-    end
-end
-
 local function build_tree(self, treeview, b3node)
     -- add_child(node, child_id, value, tag, tag_msg)
     local child = Treeview.add_child(treeview, b3node.id, "value", b3node.name)
@@ -150,38 +108,6 @@ function mt:get_war(war_id)
     return self.treeview_map[war_id]
 end
 
-function mt:select_next_frame()
-    if not self.frame_slot then
-        print("frame is empty")
-        return
-    end
-
-    assert(self.frame_slot <= #self.frames)
-    if self.frame_slot == #self.frames then
-        print("already the latest")
-        return
-    end
-
-    self.frame_slot = self.frame_slot + 1
-    assert(self.frames[self.frame_slot], "frame missed of slot:"..self.frame_slot)
-end
-
-function mt:select_prev_frame()
-    if not self.frame_slot then
-        print("frame is empty")
-        return
-    end
-
-    assert(self.frame_slot >= 1)
-    if self.frame_slot == 1 then
-        print("already the oldest")
-        return
-    end
-
-    self.frame_slot = self.frame_slot - 1
-    assert(self.frames[self.frame_slot], "frame missed of slot:"..self.frame_slot)
-end
-
 local function get_json_filenames(path)
     local list = {}
     local baseDir = love.filesystem.getSourceBaseDirectory()
@@ -198,23 +124,24 @@ local function get_json_filenames(path)
             end
         end
     end
-    local PrintR = require "lib.print_r"
-    PrintR.print_r(777, list)
     return list
+end
+
+function mt:select_menu_item(menu_key, item)
+    self[menu_key] = item
+    self.menu_recent_items[menu_key] = item
 end
 
 function mt:setup(mode, b3_tree_dir, b3_log_dir)
     self.mode = mode
 
     self.b3_tree_list = get_json_filenames(Config.B3TreeDir)
-    self.b3_tree = self.b3_tree_list[1]
+    self:select_menu_item("b3_tree", self.b3_tree_list[1])
+    local PrintR = require "lib.print_r"
+    PrintR.print_r("33333", self.b3_tree_list)
 
     self.b3_log_list = get_json_filenames(Config.B3LogDir)
-    self.b3_log = self.b3_log_list[1]
-end
-
-function mt:set_b3log(b3_log)
-    self.b3_log = b3_log
+    self:select_menu_item("b3_log", self.b3_log_list[1])
 end
 
 function mt:update(dt)
@@ -271,6 +198,8 @@ function M.new(WindowSize)
 
         b3_log_list = {},
         b3_log = nil,
+
+        menu_recent_items = {},
 
         menu = 0,
     }, mt)

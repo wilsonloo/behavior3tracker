@@ -4,6 +4,7 @@ local Config = require "config"
 
 local mmin = math.min
 local mmax = math.max
+local mfloor = math.floor
 
 local function _draw_name(x, cur_key, menu_type)
     local mgr = Global.mgr
@@ -50,11 +51,8 @@ end
 local function _select_dropdown(offset, cur_key, list)
     local mgr = Global.mgr
 
-    print("_select_drowdown:>>>>>>", offset)
     if offset == 1 then
-        print("_select_drowdown:", 2)
         if not mgr[cur_key] then
-            print("_select_drowdown:", 3)
             mgr:select_menu_item(cur_key, list[#list])
             return
         end
@@ -79,8 +77,6 @@ local function _select_dropdown(offset, cur_key, list)
             if v.file == mgr[cur_key].file then
                 local next_elem = list[k+1]
                 if next_elem then
-                    local PrintR = require "lib.print_r"
-                    PrintR.print_r("_select_drowdown:", 4, cur_key, next_elem)
                     mgr:select_menu_item(cur_key, next_elem)
                 end
                 break
@@ -136,17 +132,34 @@ local MenuFrames = {
     
     draw_dropdown = function()
         local mgr = Global.mgr
-        local cur_frame = mgr:get_cur_frame()
+        local cur_frame, frame_slot = mgr:get_cur_frame()
+        local x = Config.MENU_MARGIN_LEFT
+        local y = Config.MARGIN_TOP
+        local viewport_len = Config.WindowSize.h - Config.MARGIN_TOP
+        local viewport_count = mfloor(viewport_len/Config.FrameIDHeigh)
+        local mark = 0
+        local total_frames = #mgr.frames
+        if total_frames == viewport_count + 1 then
+            mark = 1
+        elseif total_frames > viewport_count + 1 then
+            mark = 2
+        end
+
+        local top = frame_slot + viewport_count - mark
+        top = mmin(top, total_frames)
         local count = 0
-        for k = #mgr.frames, 1, -1 do
+        for k = top, 1, -1 do
             local old_color
             if cur_frame and cur_frame.frame_id == mgr.frames[k].frame_id then
                 old_color = ColorUtils.set_color_green()
             end
-            love.graphics.print("frame:" .. mgr.frames[k].frame_id, 0, Config.MARGIN_TOP + count * 20)
+
+            love.graphics.print("frame:" .. mgr.frames[k].frame_id, x, y + count * Config.FrameIDHeigh)
             ColorUtils.restore_color(old_color)
             count = count + 1
         end
+        y = y + count * Config.FrameIDHeigh
+
     end,
 
     confirm_menu = function()

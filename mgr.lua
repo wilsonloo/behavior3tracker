@@ -100,7 +100,7 @@ end
 
 function mt:get_cur_frame()
     if self.frame_slot then
-        return self.frames[self.frame_slot]
+        return self.frames[self.frame_slot], self.frame_slot
     end
 end
 

@@ -180,11 +180,7 @@ function M.add_child(node, child_id, value, tag, tag_msg)
     end
     child.parent = node
     child.ctx = node.ctx
-    if child_id then
-        node.children[child_id] = child
-    else
-        tinsert(node.children, child)
-    end
+    tinsert(node.children, child)
     return child
 end
 

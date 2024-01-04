@@ -24,7 +24,7 @@ local ValueMetas = {
     [ValueType.SUCCESS] = {
         color = {r=0, g=255, b=0},
     },
-    [ValueType.SUCCESS] = {
+    [ValueType.RUNNING] = {
         color = {r=255, g=255, b=0},
     },
 }

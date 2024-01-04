@@ -38,14 +38,25 @@ local M = {
     },
 }
 
-local function get_node_msg(self, node)
+local function get_node_msg(self, tree_node, data)
     local msg = ""
-    if node.tag then
-        msg = msg..tostring(node.tag)
+    if tree_node.node_id > 0 then
+        msg = msg..tree_node.node_id..":"
     end
-    -- if node.tag_msg then
-    --     msg = msg..tostring(node.tag_msg)
+
+    if tree_node.tag then
+        msg = msg..tostring(tree_node.tag)
+    end
+    -- if tree_node.tag_msg then
+    --     msg = msg..tostring(tree_node.tag_msg)
     -- end
+
+    if data then
+        local run_tips = data[2]
+        if run_tips then
+            msg = msg.."("..run_tips..")"
+        end
+    end
 
     return msg
 end
@@ -87,15 +98,16 @@ local function render(self)
 
         local old_color = nil
         local frame = self.ctx.frame
-        local node_info = frame and frame.node_value_map[treeview_node.node_id]
+        local node_data = frame and frame.node_value_map[treeview_node.node_id]
 
-        if node_info then
-            local node_value = node_info[1]
+        if node_data then
+            local node_value = node_data[1]
+            local node_msg = node_data[2]
             local meta = get_value_meta(self, node_value)
             old_color = set_color(meta.color)
         end
 
-        local node_msg = get_node_msg(self, treeview_node)
+        local node_msg = get_node_msg(self, treeview_node, node_data)
         if node_msg then
             render_item(ctx, node_msg, ctx.cursor.x, ctx.cursor.y)
         end
@@ -106,16 +118,8 @@ local function render(self)
         end
 
         if treeview_node.children then
-            local array_id_set = {}
             for k, v in ipairs(treeview_node.children) do
                 do_render(v)
-                array_id_set[k] = true
-            end
-            for k, v in pairs(treeview_node.children) do
-                if not (array_id_set[k]) then
-                    render_item(ctx, k..":", ctx.cursor.x, ctx.cursor.y)
-                    do_render(v)
-                end
             end
         end
 

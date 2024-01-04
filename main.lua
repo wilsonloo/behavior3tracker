@@ -32,6 +32,11 @@ function love.draw()
 end
 
 function love.update(dt)
+    if mgr.need_reload_runtime_data then
+        mgr.need_reload_runtime_data = false
+        mgr:reload_b3_runtime_data()
+    end
+
     mgr:update(dt)
 end
 
@@ -55,7 +60,7 @@ function love.load(args)
     mgr:load_b3_tree()
 
     if mode == "file" then
-        mgr:load_from_logfile()
+        mgr:load_b3_runtime_data()
 
     elseif mode == "runtime" then
         -- TODO

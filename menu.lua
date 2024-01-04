@@ -33,13 +33,13 @@ local function _draw_dropdown(cur_key, list)
     local count = 0
     for k = 1, #list do
         local old_color
-        local PrintR = require "lib.print_r"
-        PrintR.print_r("_draw_dropdown:", cur, list[k])
         if cur and cur.file == list[k].file then
             old_color = ColorUtils.set_color_green()
         end
 
-        love.graphics.print(list[k].file, 0, Config.MARGIN_TOP + count * 20)
+        local x = Config.MENU_MARGIN_LEFT
+        local y = Config.MARGIN_TOP + count * Config.DropdownItemHeigh
+        love.graphics.print(list[k].file, x, y)
         count = count + 1
 
         if old_color then
@@ -123,6 +123,7 @@ local MenuB3Log = {
     select_dropdown = function(offset)
         local mgr = Global.mgr
         _select_dropdown(offset, "b3_log", mgr.b3_log_list)
+        mgr.need_reload_runtime_data = true
     end,
 }
 
@@ -136,7 +137,7 @@ local MenuFrames = {
         local x = Config.MENU_MARGIN_LEFT
         local y = Config.MARGIN_TOP
         local viewport_len = Config.WindowSize.h - Config.MARGIN_TOP
-        local viewport_count = mfloor(viewport_len/Config.FrameIDHeigh)
+        local viewport_count = mfloor(viewport_len/Config.DropdownItemHeigh)
         local mark = 0
         local total_frames = #mgr.frames
         if total_frames == viewport_count + 1 then
@@ -154,11 +155,11 @@ local MenuFrames = {
                 old_color = ColorUtils.set_color_green()
             end
 
-            love.graphics.print("frame:" .. mgr.frames[k].frame_id, x, y + count * Config.FrameIDHeigh)
+            love.graphics.print("frame:" .. mgr.frames[k].frame_id, x, y + count * Config.DropdownItemHeigh)
             ColorUtils.restore_color(old_color)
             count = count + 1
         end
-        y = y + count * Config.FrameIDHeigh
+        y = y + count * Config.DropdownItemHeigh
 
     end,
 

@@ -68,7 +68,13 @@ function mt:load_b3_tree()
     build_tree(self, self.treeview, data.root)
 end
 
-function mt:load_from_logfile()
+function mt:reload_b3_runtime_data()
+    self.frames = {}
+    self.frame_slot = nil
+    self:load_b3_runtime_data()
+end
+
+function mt:load_b3_runtime_data()
     assert(self.b3_log, "missing b3_log")
     
     local f = io.open(self.b3_log.fullpath, "r")
@@ -85,8 +91,8 @@ function mt:load_from_logfile()
 
         tinsert(self.frames, new_frame)
         for _, v in ipairs(frame.list) do
-            local id, stat = v[1], v[2]
-            new_frame.node_value_map[id] = {stat}
+            local id, stat, msg = v[1], v[2], v[3]
+            new_frame.node_value_map[id] = {stat, msg}
         end
     end
 
@@ -137,8 +143,6 @@ function mt:setup(mode, b3_tree_dir, b3_log_dir)
 
     self.b3_tree_list = get_json_filenames(Config.B3TreeDir)
     self:select_menu_item("b3_tree", self.b3_tree_list[1])
-    local PrintR = require "lib.print_r"
-    PrintR.print_r("33333", self.b3_tree_list)
 
     self.b3_log_list = get_json_filenames(Config.B3LogDir)
     self:select_menu_item("b3_log", self.b3_log_list[1])
@@ -198,6 +202,7 @@ function M.new(WindowSize)
 
         b3_log_list = {},
         b3_log = nil,
+        need_reload_runtime_data = false,
 
         menu_recent_items = {},
 

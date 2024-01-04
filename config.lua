@@ -4,7 +4,7 @@ local M = {
 
     VERTICLE_SEPREATOR_WIDTH = 15,
 
-    FrameIDHeigh = 20,
+    DropdownItemHeigh = 20,
 
     WindowSize = {
         w = 1280,

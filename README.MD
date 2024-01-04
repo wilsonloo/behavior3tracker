@@ -27,7 +27,3 @@
     ```
 
 * 模式二：动态读取（待续，todo）
-
-edit the flowing .bat file and change file using res/logic_test.log
-load_file.bat load local log file to parse and render
-watch_file.bat watch file change、parse and render

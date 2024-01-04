@@ -2,7 +2,7 @@ local Global = require "global"
 local Menu = require "menu"
 
 function love.keypressed(key)
-    local menu_info = Menu.MenuList[Global.mgr.menu]
+    local menu_info = Menu.MenuList[Global.mgr.menu_type]
     if key == "up" then
         menu_info.select_dropdown(1)
     elseif key == "down" then

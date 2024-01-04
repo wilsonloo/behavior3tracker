@@ -23,10 +23,10 @@ function love.draw()
     --love.graphics.print("Hello World!", 400, 300)
     Menu.draw()
 
-    local menu_info = Menu.get_menu_info(mgr.menu)
+    local menu_info = Menu.get_menu_info(mgr.menu_type)
     LeftDropdown.draw(menu_info)
 
-    if mgr.menu == 0 then
+    if mgr.menu_type == Config.MenuType.Frame then
         mgr:draw()
     end
 end

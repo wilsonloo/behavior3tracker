@@ -6,15 +6,15 @@ local mmin = math.min
 local mmax = math.max
 local mfloor = math.floor
 
-local function _draw_name(x, cur_key, menu_type)
+local function _draw_name(x, cur_key, menu_type, menu_title)
     local mgr = Global.mgr
     local cur = mgr[cur_key]
     local old_color = nil
-    if mgr.menu == menu_type then
+    if mgr.menu_type == menu_type then
         old_color = ColorUtils.set_color_green()
     end
 
-    local menuStr = (cur and cur.file) or "empty"
+    local menuStr = (menu_title and menu_title .. "\n" or "") .. ((cur and cur.file) or "empty")
     local len = love.graphics.getFont():getWidth(menuStr)
     love.graphics.print(menuStr, x, 0)
     x = x + len
@@ -87,8 +87,10 @@ end
 
 -- 行为树菜单
 local MenuB3Tree = {
+    menu_type = Config.MenuType.B3Tree,
+
     draw_name = function(x)
-        return _draw_name(x, "b3_tree", Config.MenuType.B3Tree)
+        return _draw_name(x, "b3_tree", Config.MenuType.B3Tree, "Current B3 Tree:")
     end,
 
     draw_dropdown = function()
@@ -97,39 +99,54 @@ local MenuB3Tree = {
     end,
 
     confirm_menu = function()
-        Global.mgr.menu = 0
+        local mgr = Global.mgr
+        mgr.menu_type = Config.MenuType.Frame
+        mgr:on_b3tree_menu_item_selected()
+        mgr.need_reload_runtime_data = true
+    end,
+
+    select_menu = function()
+        Global.mgr:on_b3tree_menu_item_selected()
     end,
 
     select_dropdown = function(offset)
         local mgr = Global.mgr
         _select_dropdown(offset, "b3_tree", mgr.b3_tree_list)
+        mgr:filter_log_list()
     end,
 }
 
 -- 数据文件菜单
 local MenuB3Log = {
+    menu_type = Config.MenuType.B3Log,
+
     draw_name = function(x)
-        return _draw_name(x, "b3_log", Config.MenuType.B3Log)
+        return _draw_name(x, "b3_log", Config.MenuType.B3Log, "Current Runtime Log:")
     end,
 
     draw_dropdown = function()
-        _draw_dropdown("b3_log", Global.mgr.b3_log_list)
+        _draw_dropdown("b3_log", Global.mgr.b3_log_list_filtered)
     end,
 
     confirm_menu = function()
-        Global.mgr.menu = 0
+        local mgr = Global.mgr
+        mgr.menu_type = Config.MenuType.Frame
+        mgr.need_reload_runtime_data = true
+    end,
+
+    select_menu = function()
+
     end,
     
     select_dropdown = function(offset)
         local mgr = Global.mgr
-        _select_dropdown(offset, "b3_log", mgr.b3_log_list)
-        mgr.need_reload_runtime_data = true
+        _select_dropdown(offset, "b3_log", mgr.b3_log_list_filtered)
     end,
 }
 
 -- 数据文件各帧信息
 local MenuFrames = {
-    type = Config.MenuType.Frame,
+    menu_type = Config.MenuType.Frame,
     
     draw_dropdown = function()
         local mgr = Global.mgr
@@ -140,13 +157,18 @@ local MenuFrames = {
         local viewport_count = mfloor(viewport_len/Config.DropdownItemHeigh)
         local mark = 0
         local total_frames = #mgr.frames
+        if total_frames == 0 then
+            love.graphics.print("No Frames", x, y)
+            return
+        end
+
         if total_frames == viewport_count + 1 then
             mark = 1
         elseif total_frames > viewport_count + 1 then
             mark = 2
         end
 
-        local top = frame_slot + viewport_count - mark
+        local top = (frame_slot or 0) + viewport_count - mark
         top = mmin(top, total_frames)
         local count = 0
         for k = top, 1, -1 do
@@ -164,7 +186,7 @@ local MenuFrames = {
     end,
 
     confirm_menu = function()
-        Global.mgr.menu = 0
+        Global.mgr.menu_type = Config.MenuType.Frame
     end,
 
     select_dropdown = function(offset)
@@ -205,9 +227,9 @@ local MenuList = {
 local M = {}
 M.MenuList = MenuList
 
-function M.get_menu_info(menu)
-    if menu then
-        return MenuList[menu]
+function M.get_menu_info(menu_type)
+    if menu_type then
+        return MenuList[menu_type]
     end
 end
 
@@ -228,29 +250,27 @@ end
 function M.select_menu(offset)
     local mgr = Global.mgr
     local first = false
-    local menu = mgr.menu
-    if menu == 0 then
+    local menu_type = mgr.menu_type
+    if menu_type == Config.MenuType.Frame then
         first = true
         if offset == 1 then
-            mgr.menu = 1
+            mgr.menu_type = Config.MenuType.B3Tree
         elseif offset == -1 then
-            mgr.menu = #MenuList
+            mgr.menu_type = Config.MenuType.B3Log
         else
             assert(false, "invalid select menu offset:"..tostring(offset))
         end
-    end
-
-    if not first then
-        mgr.menu = mmin(mmax(menu+offset, 1), #MenuList)
+    else
+        mgr.menu_type = MenuList[mmin(mmax(menu_type+offset, 1), #MenuList)].menu_type
     end
     
     local list, cur_key
-    if mgr.menu == Config.MenuType.B3Tree then
+    if mgr.menu_type == Config.MenuType.B3Tree then
         list = mgr.b3_tree_list
         cur_key = "b3_tree"
 
-    elseif mgr.menu == Config.MenuType.B3Log then
-        list = mgr.b3_log_list
+    elseif mgr.menu_type == Config.MenuType.B3Log then
+        list = mgr.b3_log_list_filtered
         cur_key = "b3_log"
     else
         assert(false)
@@ -259,19 +279,9 @@ function M.select_menu(offset)
     local recent = mgr.menu_recent_items[cur_key]
     if recent then
         -- 检测recent有效性
-        if list then
-            local ok = false
-            for _, v in ipairs(list) do
-                if v.file == recent.file then
-                    ok = true
-                    break
-                end
-            end
-            if not ok then
-                recent = nil
-            end
-        else
+        if not mgr:check_rectent(recent, list) then
             recent = nil
+            mgr.menu_recent_items[cur_key] = nil
         end
     end
 
@@ -284,6 +294,9 @@ function M.select_menu(offset)
             mgr:select_menu_item(cur_key, nil)
         end
     end
+
+    local menu_info = M.MenuList[mgr.menu_type]
+    menu_info.select_menu()
 end
 
 return M

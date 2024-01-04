@@ -75,7 +75,10 @@ function mt:reload_b3_runtime_data()
 end
 
 function mt:load_b3_runtime_data()
-    assert(self.b3_log, "missing b3_log")
+    if not self.b3_log then
+        print("missing b3_log")
+        return
+    end
     
     local f = io.open(self.b3_log.fullpath, "r")
     assert(f, self.b3_log.fullpath)
@@ -98,6 +101,18 @@ function mt:load_b3_runtime_data()
 
     local _, frame_slot = get_last_frame(self)
     self.frame_slot = frame_slot
+end
+
+local function parse_treename(log_fullpath)
+    assert(log_fullpath, "empty log_fullpath")
+    
+    local f = io.open(log_fullpath, "r")
+    assert(f, log_fullpath)
+    local text = f:read("a")
+    f:close()
+
+    local data = Json.decode(text)
+    return data.tree_name
 end
 
 function mt:dump()
@@ -133,19 +148,89 @@ local function get_json_filenames(path)
     return list
 end
 
+local function load_b3tree_filenames(self)
+    self.b3_tree_list = get_json_filenames(Config.B3TreeDir)
+end
+
+local function load_runtime_filenames(self)
+    self.b3_log_list = get_json_filenames(Config.B3LogDir)
+
+    -- 填充tree_name
+    for _, v in ipairs(self.b3_log_list) do
+        v.tree_name = parse_treename(v.fullpath)
+    end
+end
+
+function mt:on_b3tree_menu_item_selected()
+    print("select b3_tree:", self.b3_tree and self.b3_tree.file or "none")
+    self:filter_log_list()
+
+    local recent = self.menu_recent_items["b3_log"]
+    if recent then
+        if self:check_rectent(recent, self.b3_log_list_filtered) then
+            self:select_menu_item("b3_log", recent)
+        else
+            recent = nil
+        end
+    end
+    
+    if not recent then
+        self:select_menu_item("b3_log", self.b3_log_list_filtered[1])
+    end
+end
+
 function mt:select_menu_item(menu_key, item)
     self[menu_key] = item
     self.menu_recent_items[menu_key] = item
 end
 
+function mt:filter_log_list()
+    self.b3_log_list_filtered = {}
+    if self.b3_tree then
+        if self.b3_log_list then
+            for _, v in ipairs(self.b3_log_list) do
+                if v.tree_name == self.b3_tree.file then
+                    tinsert(self.b3_log_list_filtered, v)
+                    print("  filter log:", v.file)
+                end
+            end
+        end
+    end
+    
+    local recent = self.menu_recent_items["b3_log"]
+    if recent then
+        -- todo check
+        self:select_menu_item("b3_log", recent)
+    else
+        self:select_menu_item("b3_log", self.b3_log_list_filtered[1])
+    end
+end
+
+-- 检测recent有效性
+function mt:check_rectent(recent, list)
+    assert(recent, "recent nil")
+
+    if not list then
+        return false
+    end
+
+    local ok = false
+    for _, v in ipairs(list) do
+        if v.file == recent.file then
+            return true
+        end
+    end
+    return false
+end
+
 function mt:setup(mode, b3_tree_dir, b3_log_dir)
     self.mode = mode
 
-    self.b3_tree_list = get_json_filenames(Config.B3TreeDir)
-    self:select_menu_item("b3_tree", self.b3_tree_list[1])
+    load_b3tree_filenames(self)
+    load_runtime_filenames(self)
 
-    self.b3_log_list = get_json_filenames(Config.B3LogDir)
-    self:select_menu_item("b3_log", self.b3_log_list[1])
+    self:select_menu_item("b3_tree", self.b3_tree_list[1])
+    self:on_b3tree_menu_item_selected()
 end
 
 function mt:update(dt)
@@ -201,12 +286,13 @@ function M.new(WindowSize)
         b3_tree = nil,
 
         b3_log_list = {},
+        b3_log_list_filtered = {},
         b3_log = nil,
         need_reload_runtime_data = false,
 
         menu_recent_items = {},
 
-        menu = 0,
+        menu_type = Config.MenuType.Frame,
     }, mt)
 
     Mouse.register("mousepressed", function(x, y, button, istouch)

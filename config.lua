@@ -19,6 +19,10 @@ local M = {
 
     B3TreeDir = "/res/b3_tree/",
     B3LogDir = "/res/b3_log/",
+
+    -- 开始运行监控时需要开启的服务端地址
+    RuntimeServerIp = "*",
+    RuntimeServerPort = 28989,
 }
 
 return M

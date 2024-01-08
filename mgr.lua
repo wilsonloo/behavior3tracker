@@ -3,6 +3,7 @@ local Json = require "lib.json"
 local Mouse = require "mouse"
 local Treeview = require "views.treeview"
 local Config = require "config"
+local RuntimeServer = require "runtime_server"
 
 local tunpack = unpack or table.unpack
 local tinsert = table.insert
@@ -223,19 +224,32 @@ function mt:check_rectent(recent, list)
     return false
 end
 
-function mt:setup(mode, b3_tree_dir, b3_log_dir)
+function mt:start(mode)
     self.mode = mode
 
-    load_b3tree_filenames(self)
-    load_runtime_filenames(self)
+    if mode == "file" then
+        load_b3tree_filenames(self)
+        load_runtime_filenames(self)
+    
+        self:select_menu_item("b3_tree", self.b3_tree_list[1])
+        self:on_b3tree_menu_item_selected()
+        self:load_b3_tree()
+        self:load_b3_runtime_data()
 
-    self:select_menu_item("b3_tree", self.b3_tree_list[1])
-    self:on_b3tree_menu_item_selected()
+    elseif mode == "runtime" then
+        load_b3tree_filenames(self)
+        self:select_menu_item("b3_tree", self.b3_tree_list[1])
+        self:on_b3tree_menu_item_selected()
+        self:load_b3_tree()
+
+        self.server = RuntimeServer.new(Config.RuntimeServerIp, Config.RuntimeServerPort)
+        self.server:start()
+    end
 end
 
 function mt:update(dt)
     if self.mode == "runtime" then
-        -- todo
+        self.server:update(dt)
     end
 
     local cur_frame = self:get_cur_frame()
@@ -289,6 +303,8 @@ function M.new(WindowSize)
         b3_log_list_filtered = {},
         b3_log = nil,
         need_reload_runtime_data = false,
+
+        server = nil,
 
         menu_recent_items = {},
 

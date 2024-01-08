@@ -44,25 +44,14 @@ end
 function love.load(args)
     love.window.setMode(Config.WindowSize.w, Config.WindowSize.h)
     local function error_usage()
-        error("usage: \nlove ..\\. <file/runtime> <b3_file> <b3_log> [--console]\n")
-    end
-
-    if not (args) or #args < 3 then
-        error_usage()
-        return
+        error("usage: love ..\\. <file/runtime> [--console]")
     end
 
     local mode = args[1]
-    local b3_tree_dir = args[2]
-    local b3_log_dir = args[3]
-
-    mgr:setup(mode, b3_tree_dir, b3_log_dir)
-    mgr:load_b3_tree()
-
-    if mode == "file" then
-        mgr:load_b3_runtime_data()
-
-    elseif mode == "runtime" then
-        -- TODO
+    if not mode then
+        error_usage()
+        return
     end
+    
+    mgr:start(mode)
 end

@@ -1,5 +1,3 @@
-@rem love . file res\\logic.log --console
-
 cd love2d
 
 set b3_tree_dir=D:/workstation/behavior3tracker/sample/b3_tree/

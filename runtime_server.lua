@@ -36,7 +36,6 @@ end
 
 function mt:update(dt)
     if not self.client then
-        
         self.client, errmsg = self.sock:accept()
         if not self.client then
             if errmsg ~= "timeout" then
@@ -45,37 +44,41 @@ function mt:update(dt)
             return
         else
             print("client connected")    
+            self.client:settimeout(1)
         end
     end
 
-    --很可能有许多消息，因此循环来等待消息
-    local data, errmsg
-    local frame_msg
-    repeat
+    local recvt, sendt, status = Socket.select({self.client}, nil, 1)
+    if #recvt > 0 then
         --[[这里期望另一端的 tcp:send!
             tcp:receive将返回等待数据包 （或为nil，或错误消息）。
             数据是一个字符串，承载远端tcp:send的内容。我们可以使用lua的string库处理
         ]]
-        data, errmsg = self.client:receive()
+
+        local recv, errmsg = self.client:receive()
         if errmsg == "closed" then
             error("client is closed")
             return;
         end
+
+        if errmsg == "timeout" then
+            return;
+        end
         
-        repeat 
-            if data then
-                print("current data:", data, "len:", #data)
-                frame_msg, data = try_parse_message(data)
+        if recv then
+            self.data = self.data .. recv
+            print("current recv:", #self.data, self.data)
+
+            --很可能有许多消息，因此循环来等待消息
+            local frame_msg
+            repeat 
+                frame_msg, self.data = try_parse_message(self.data)
                 if frame_msg then
                     on_new_frame(frame_msg)
                 end
-
-            elseif errmsg ~= 'timeout' then
-                -- 打印错误，一般情况下错误是timeout，由于我们把timeout设为0了，
-                error("Network error: "..tostring(errmsg))
-            end
-        until not frame_msg
-    until not data
+            until not frame_msg
+        end
+    end
 end
 
 local M = {}
@@ -87,6 +90,8 @@ function M.new(ip, port)
         sock = nil,
         time_elapsed = 0,
         client = nil,
+
+        data = "",
     }
     setmetatable(server, mt)
     return server

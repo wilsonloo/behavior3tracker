@@ -11,13 +11,17 @@ local function on_new_frame(self, frame_msg)
     print("   frame data:", frame_msg)
     local data = Json.decode(frame_msg)
 
-    if self.last_frame_md5 and self.last_frame_md5 == data.md5 then
-        self.same_frames = self.same_frames + 1
-    end
+    if Config.FoldSameFrames then
+        if self.last_frame_md5 and self.last_frame_md5 == data.md5 then
+            self.same_frames = self.same_frames + 1
+        end
 
-    if not self.last_frame_md5 or self.last_frame_md5 ~= data.md5 or self.same_frames > Config.FoldSameFrames then
-        self.last_frame_md5 = data.md5
-        self.same_frames = 1
+        if not self.last_frame_md5 or self.last_frame_md5 ~= data.md5 or self.same_frames > Config.FoldSameFrames then
+            self.last_frame_md5 = data.md5
+            self.same_frames = 1
+            Global.mgr:add_frame(data)
+        end
+    else
         Global.mgr:add_frame(data)
     end
 end

@@ -25,7 +25,7 @@ local M = {
     RuntimeServerPort = 28989,
 
     -- 相同内容frame的最大折叠次数
-    FoldSameFrames = 10,
+    FoldSameFrames = nil,
 }
 
 M.ScrollerMatrix = {

@@ -88,20 +88,24 @@ function mt:load_b3_runtime_data()
 
     local data = Json.decode(text)
     for _, frame in ipairs(data.frames) do
-        local new_frame = {
-            frame_id = frame.frame_id,
-            node_value_map={},
-        }
-
-        tinsert(self.frames, new_frame)
-        for _, v in ipairs(frame.list) do
-            local id, stat, msg = v[1], v[2], v[3]
-            new_frame.node_value_map[id] = {stat, msg}
-        end
+        self:add_frame(frame)
     end
 
     local _, frame_slot = get_last_frame(self)
     self.frame_slot = frame_slot
+end
+
+function mt:add_frame(frame)
+    local new_frame = {
+        frame_id = frame.frame_id,
+        node_value_map={},
+    }
+
+    tinsert(self.frames, new_frame)
+    for _, v in ipairs(frame.list) do
+        local id, stat, msg = v[1], v[2], v[3]
+        new_frame.node_value_map[id] = {stat, msg}
+    end
 end
 
 local function parse_treename(log_fullpath)
@@ -121,9 +125,12 @@ function mt:dump()
 end
 
 function mt:get_cur_frame()
-    if self.frame_slot then
-        return self.frames[self.frame_slot], self.frame_slot
+    if not self.frame_slot or self.frame_slot == 0 then
+        if self.frames and #self.frames > 0 then
+            self.frame_slot = #self.frames
+        end
     end
+    return self.frames[self.frame_slot], self.frame_slot
 end
 
 function mt:get_war(war_id)

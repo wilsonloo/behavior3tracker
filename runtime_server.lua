@@ -1,11 +1,15 @@
 local Socket = require "socket"
+local Json = require "lib.json"
 
+local Global = require "global"
 local sformat = string.format
 
 local FramePattern = "^(%^%^%^)([^%$]*)(%$%$%$)"
 
 local function on_new_frame(frame_msg)
     print("   frame data:", frame_msg)
+    local data = Json.decode(frame_msg)
+    Global.mgr:add_frame(data)
 end
 
 local function try_parse_message(data)

@@ -2,14 +2,24 @@ local Socket = require "socket"
 local Json = require "lib.json"
 
 local Global = require "global"
+local Config = require "config"
 local sformat = string.format
 
 local FramePattern = "^(%^%^%^)([^%$]*)(%$%$%$)"
 
-local function on_new_frame(frame_msg)
+local function on_new_frame(self, frame_msg)
     print("   frame data:", frame_msg)
     local data = Json.decode(frame_msg)
-    Global.mgr:add_frame(data)
+
+    if self.last_frame_md5 and self.last_frame_md5 == data.md5 then
+        self.same_frames = self.same_frames + 1
+    end
+
+    if not self.last_frame_md5 or self.last_frame_md5 ~= data.md5 or self.same_frames > Config.FoldSameFrames then
+        self.last_frame_md5 = data.md5
+        self.same_frames = 1
+        Global.mgr:add_frame(data)
+    end
 end
 
 local function try_parse_message(data)
@@ -48,7 +58,7 @@ function mt:update(dt)
             return
         else
             print("client connected")    
-            self.client:settimeout(1)
+            self.client:settimeout(0.1)
         end
     end
 
@@ -78,7 +88,7 @@ function mt:update(dt)
             repeat 
                 frame_msg, self.data = try_parse_message(self.data)
                 if frame_msg then
-                    on_new_frame(frame_msg)
+                    on_new_frame(self, frame_msg)
                 end
             until not frame_msg
         end
@@ -96,6 +106,8 @@ function M.new(ip, port)
         client = nil,
 
         data = "",
+        last_frame_md5 = nil,
+        same_frames = 0,
     }
     setmetatable(server, mt)
     return server

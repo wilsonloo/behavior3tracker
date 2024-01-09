@@ -23,6 +23,9 @@ local M = {
     -- 开始运行监控时需要开启的服务端地址
     RuntimeServerIp = "*",
     RuntimeServerPort = 28989,
+
+    -- 相同内容frame的最大折叠次数
+    FoldSameFrames = 10,
 }
 
 M.ScrollerMatrix = {

@@ -11,6 +11,7 @@ local tsort = table.sort
 local string_gsub = string.gsub
 local string_match = string.match
 local string_format = string.format
+local mmax = math.max
 
 local ValueType = {
     FAIL = 1,
@@ -59,10 +60,10 @@ function mt:load_b3_tree()
     f:close()
 
     local data = Json.decode(text)
-    self.treeview = Treeview.new_treeview(self.ScrollerMatrix.x, 
-        self.ScrollerMatrix.y,
-        self.ScrollerMatrix.w, 
-        self.ScrollerMatrix.h)
+    self.treeview = Treeview.new_treeview(Config.ScrollerMatrix.x,
+        Config.ScrollerMatrix.y,
+        Config.ScrollerMatrix.w,
+        Config.ScrollerMatrix.h)
 
     Treeview.set_value_metas(self.treeview, ValueMetas)
     
@@ -269,6 +270,10 @@ function mt:draw()
     local frame = self:get_cur_frame()
     -- local PrintR = require "lib.print_r"
     -- PrintR.print_r("frame data:", frame)
+
+    local x = mmax(Config.MENU_MARGIN_LEFT + self.frame_tag_len + Config.MENU_MARGIN_LEFT,
+         Config.ScrollerMatrix.x)
+    Treeview.set_matrix(self.treeview, {x=x})
     Treeview.draw(self.treeview, frame, true)
 end
 
@@ -288,12 +293,6 @@ local M = {}
 function M.new(WindowSize)
     local mgr = setmetatable({
         WindowSize = WindowSize,
-        ScrollerMatrix = {
-            x = 80,
-            y = Config.MARGIN_TOP,
-            w = WindowSize.w - 60,
-            h = WindowSize.h,
-        },
         war_ids_set = {},
         war_ids = {},
 
@@ -314,8 +313,8 @@ function M.new(WindowSize)
         server = nil,
 
         menu_recent_items = {},
-
         menu_type = Config.MenuType.Frame,
+        frame_tag_len = Config.ScrollerMatrix.x,
     }, mt)
 
     Mouse.register("mousepressed", function(x, y, button, istouch)

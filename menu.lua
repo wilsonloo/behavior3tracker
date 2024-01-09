@@ -171,18 +171,23 @@ local MenuFrames = {
         local top = (frame_slot or 0) + viewport_count - mark
         top = mmin(top, total_frames)
         local count = 0
+        local frame_tag_len = 0
         for k = top, 1, -1 do
             local old_color
             if cur_frame and cur_frame.frame_id == mgr.frames[k].frame_id then
                 old_color = ColorUtils.set_color_green()
             end
 
-            love.graphics.print("frame:" .. mgr.frames[k].frame_id, x, y + count * Config.DropdownItemHeigh)
+            local frame_tag = "frame:" .. mgr.frames[k].frame_id
+            local len = love.graphics.getFont():getWidth(frame_tag)
+            frame_tag_len = mmax(frame_tag_len, len)
+            love.graphics.print(frame_tag, x, y + count * Config.DropdownItemHeigh)
             ColorUtils.restore_color(old_color)
             count = count + 1
         end
         y = y + count * Config.DropdownItemHeigh
 
+        mgr.frame_tag_len = frame_tag_len
     end,
 
     confirm_menu = function()

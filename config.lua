@@ -25,4 +25,11 @@ local M = {
     RuntimeServerPort = 28989,
 }
 
+M.ScrollerMatrix = {
+    x = 80,
+    y = M.MARGIN_TOP,
+    w = M.WindowSize.w - 60,
+    h = M.WindowSize.h,        
+}
+
 return M

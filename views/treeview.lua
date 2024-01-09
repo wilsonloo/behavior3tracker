@@ -155,17 +155,13 @@ function M.new_treeview(x, y, w, h)
     local node = new_node(nil, M.TAG_TYPE.ROOT, "root")
     node.ctx = {
         rendered = false,
-        anchor = {
-            x = x,
-            y = y,
-        },
         cursor = {
             x = 0,
             y = 0,
         },
         LINE_HIGHT = 15,
         ITEM_INTERVAL = 10,
-        scroller = Scroller.new(x, y, w, h),
+        scroller = Scroller.new(x+100, y, w, h),
         value_metas = nil,
     }
     node.node_id = -1
@@ -191,6 +187,24 @@ end
 ---@param metas: ValueMetaInterface[]
 function M.set_value_metas(self, metas)
     self.ctx.value_metas = metas
+end
+
+function M.set_matrix(self, set)
+    if set.x then
+        self.ctx.scroller.base_x = set.x
+    end
+
+    if set.y then
+        self.ctx.scroller.base_y = set.y
+    end
+
+    if set.w then
+        self.ctx.scroller.base_w = set.w
+    end
+
+    if set.h then
+        self.ctx.scroller.base_h = set.h
+    end
 end
 
 return M

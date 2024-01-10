@@ -42,6 +42,7 @@ end
 
 ---@param args[1] mode <file> or <runtime>
 function love.load(args)
+    love.window.setTitle("B3 Tracker")
     love.window.setMode(Config.WindowSize.w, Config.WindowSize.h)
     local function error_usage()
         error("usage: love ..\\. <file/runtime> [--console]")

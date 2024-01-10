@@ -214,6 +214,36 @@ local MenuFrames = {
         mgr.frame_slot = mgr.frame_slot + offset
         mgr.frame_slot = mmin(mmax(mgr.frame_slot, 1), #mgr.frames)
     end,
+
+    select_newest = function()
+        local mgr = Global.mgr
+        mgr.frame_slot = #mgr.frames
+    end,
+
+    select_oldest = function()
+        local mgr = Global.mgr
+        if #mgr.frames > 0 then
+            mgr.frame_slot = 1
+        else
+            mgr.frame_slot = 0
+        end
+    end,
+
+    select_page = function(offset)
+        local mgr = Global.mgr
+        local viewport_len = Config.WindowSize.h - Config.MARGIN_TOP
+        local viewport_count = mfloor(viewport_len/Config.DropdownItemHeigh) - 2
+        if viewport_count > 0 then
+            viewport_count = viewport_count * offset
+        end
+
+        local frame_slot = mgr.frame_slot + viewport_count 
+        mgr.frame_slot = mmax(mmin(frame_slot, #mgr.frames), 1)
+        if #mgr.frames == 0 then
+            mgr.frame_slot = 0
+        end
+        print(33333, offset, viewport_count, frame_slot, #mgr.frames, mgr.frame_slot)
+    end,
 }
 
 local function draw_verticle_sepreator(x)

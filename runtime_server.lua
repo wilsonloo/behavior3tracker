@@ -8,7 +8,7 @@ local sformat = string.format
 local FramePattern = "^(%^%^%^)([^%$]*)(%$%$%$)"
 
 local function on_new_frame(self, frame_msg)
-    print("   frame data:", frame_msg)
+    --print("   frame data:", frame_msg)
     local data = Json.decode(frame_msg)
 
     if Config.FoldSameFrames then
@@ -85,7 +85,7 @@ function mt:update(dt)
         
         if recv then
             self.data = self.data .. recv
-            print("current recv:", #self.data, self.data)
+            --print("current recv:", #self.data, self.data)
 
             --很可能有许多消息，因此循环来等待消息
             local frame_msg

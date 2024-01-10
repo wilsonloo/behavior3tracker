@@ -110,6 +110,7 @@
 ## todo 和 缺陷
 * 当行为树结构很大时，会超出绘制区域，需要完善滚动条的功能
 * 运行时模式 不区分任何单位的frame数据
+* 集成到 behavior3editor
 
 ## 参考
 * 行为树编辑工具：https://github.com/wilsonloo/behavior3editor.git
